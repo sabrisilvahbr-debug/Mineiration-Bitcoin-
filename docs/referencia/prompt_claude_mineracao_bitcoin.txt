@@ -1,0 +1,96 @@
+# Prompt para o Claude: Escritório Virtual de Mineração de Bitcoin com 25 Agentes (24h)
+
+> Copie tudo a partir de "INÍCIO DO PROMPT" e cole no Claude.
+> Pesquisa feita em 28/10/2026. Os números mudam todo dia, e o prompt manda o Claude buscá-los ao vivo.
+
+---
+
+## Leia antes (verdades que o prompt respeita)
+
+1. **Máquinas em 3D não mineram.** Minerar Bitcoin é calcular hashes SHA-256 em chips físicos (ASICs). Um modelo 3D é só imagem. Uma IA não fabrica hardware.
+2. **Computador comum ou servidor na nuvem dá prejuízo.** A rede tem cerca de **1.064 EH/s** (1 bilhão de TH/s) ([BTC Mining Markets, 24/10/2026](https://btcmining.markets/assets/insights/bmm-market-pulse-weekly-2026-10-24.pdf)). Uma placa de vídeo é insignificante perto disso.
+3. **Receita atual por poder de mineração (hashprice):** cerca de **44.945 sats, ou US$ 36,85, por PH/s por dia** (mesma fonte). Uma Antminer S21 XP (270 TH/s, 3.645 W, 13,5 J/TH) ([Minerstat](https://minerstat.com/compare/bitmain-antmine-s21-xp-270th-vs-microbt-whatsminer-m66)) gera cerca de US$ 9,95/dia bruto e consome cerca de 87,5 kWh/dia. Com energia residencial brasileira (~R$ 0,80/kWh), **dá prejuízo**.
+4. **Recompensa por bloco:** 3,125 BTC desde o halving de abril de 2024. O próximo halving está previsto para cerca de 2028 (1,5625 BTC). A dificuldade é de cerca de 140,58 T ([CoinWarz, 28/10/2026](https://www.coinwarz.com/bitcoin-difficulty)), e o preço do BTC, cerca de US$ 80.535.
+5. **O que é possível de verdade:** **alugar poder de mineração** (NiceHash, Braiins Hashpower), **hospedar ASICs** em data centers com energia barata, ou **simular**. Os 25 agentes de IA gerenciam isso.
+6. **Golpes:** sites de "cloud mining" que prometem um rendimento fixo diário, pagam bônus por indicação e escondem os contratos são, em geral, pirâmides.
+7. **Brasil:** desde 2026 vale a **DeCripto (IN RFB 2.291/2025)**, que substitui a IN 1.888/2019 ([Receita Federal](https://www.gov.br/receitafederal/pt-br/assuntos/orientacao-tributaria/declaracoes-e-demonstrativos/criptoativos/decripto)). Ganhos com cripto têm tributação. Consulte um contador.
+
+---
+
+## INÍCIO DO PROMPT
+
+Você é um engenheiro sênior de software, especialista em mineração de Bitcoin, sistemas multiagentes e visualização 3D. Construa comigo o **"Escritório Virtual de Mineração"**: uma aplicação web em que **25 agentes de IA** trabalham 24 horas por dia, 7 dias por semana, para operar mineração de Bitcoin **real e lucrativa, ou parar quando não for**. Todo o ambiente aparece num escritório 3D.
+
+### Regras de honestidade (obrigatórias)
+- Nunca afirme que modelos 3D, CPUs, GPUs ou "IA" mineram Bitcoin com lucro. A mineração real vem de: (A) hashrate alugado via API, (B) ASICs físicos hospedados, ou (C) modo simulação.
+- Todo número de mercado (hashrate, dificuldade, hashprice, preço, taxas) precisa vir de uma API em tempo real, com fonte e horário. Não invente valores.
+- Se a conta der prejuízo, diga isso claramente e recomende pausar.
+- Recuse integrar plataformas de "cloud mining" com rendimento fixo garantido.
+- Não prometa lucro. Mostre cenários (pessimista, base e otimista).
+
+### Fontes de dados (pesquise a documentação atual antes de codar)
+- Rede: API do mempool.space (dificuldade, hashrate, taxas, blocos).
+- Hashprice: Hashrate Index (Luxor), quando disponível.
+- Hashrate alugado: API do NiceHash (marketplace SHA256ASICBOOST) e Braiins Hashpower.
+- Pools: Braiins Pool, F2Pool, ViaBTC, Foundry (APIs de estatística, FPPS/PPLNS). Prefira Stratum V2 quando houver suporte.
+- ASICs (opção B): APIs do firmware (Braiins OS, LuxOS, CGMiner API) para ler hashrate, temperatura e consumo e para reiniciar a máquina.
+- Preço BTC/BRL: uma corretora brasileira com API pública e mais uma fonte de conferência.
+
+### Arquitetura
+- Frontend: React + TypeScript + Three.js (React Three Fiber). Mostra um escritório 3D com 25 mesas, cada agente como um avatar com status (trabalhando, alerta, ocioso), uma "sala de servidores" que mostra o hashrate real e um painel de lucro e prejuízo em BRL.
+- Backend: Node/TypeScript ou Python, um orquestrador e uma fila de tarefas (ex.: BullMQ/Redis ou Temporal), com banco Postgres e agendador cron.
+- Agentes: cada um com papel, ferramentas permitidas, limites e logs. Use LLM só para decisões e resumos. As contas devem ser determinísticas, em código.
+- Hospedagem 24h: VPS ou nuvem com reinício automático, health checks e alertas por Telegram ou e-mail.
+
+### Os 25 agentes
+1. Diretor (orquestra e resolve conflitos)
+2. Coletor de dados da rede
+3. Coletor de hashprice
+4. Coletor de preço BTC/BRL
+5. Analista de lucratividade (receita − custo de aluguel ou energia − taxas)
+6. Comprador de hashrate (cria e ajusta ordens no NiceHash/Braiins)
+7. Gestor de ordens (preço, limite de velocidade, cancelamento)
+8. Monitor de pool
+9. Seletor de pool (troca automática pela melhor relação de taxa e estabilidade)
+10. Monitor de ASICs (temperatura, ventoinhas, hashrate)
+11. Técnico remoto (reinicia ASICs e ajusta frequência e undervolt)
+12. Gestor de energia (tarifas e horários, para hospedagem própria)
+13. Tesoureiro (saldos e pagamentos recebidos)
+14. Guardião de risco (stop-loss diário, limite de gasto, pausa automática)
+15. Segurança (rotação de chaves, detecção de acessos estranhos)
+16. Auditor (confere cada transação contra os registros)
+17. Contador (relatórios no formato DeCripto/Receita)
+18. Previsor (próximo ajuste de dificuldade e halving)
+19. Pesquisador de mercado (novos ASICs, preços de hospedagem)
+20. Atualizador de ferramentas (verifica versões de SDKs e firmware, abre PR, nunca faz deploy sem testes)
+21. Testador (roda testes e simulação antes de qualquer mudança)
+22. Alertas e comunicação (Telegram/e-mail)
+23. Relator (resumo diário e semanal em português)
+24. Detector de golpes (avalia plataformas antes de integrar)
+25. Simulador (backtest com dados históricos reais)
+
+### Ciclo automático
+- A cada 1 a 5 minutos: coletar dados → calcular margem → se margem < limite, pausar as ordens; se margem > limite, manter ou aumentar dentro do teto de gasto.
+- A cada hora: checar a saúde das pools e ASICs. Por dia: relatório e conciliação.
+- Toda decisão com dinheiro fica registrada com motivo, dados usados e resultado.
+
+### Segurança
+- Chaves de API num cofre (variáveis de ambiente ou gerenciador de segredos), nunca no código.
+- Chaves de API **sem permissão de saque**. Pagamentos vão para uma carteira de autocustódia do usuário.
+- Limites rígidos em código: gasto diário máximo, gasto total máximo, pausa geral com um botão.
+- Agentes não podem alterar os próprios limites.
+
+### Fases de entrega
+1. **Simulação** (sem dinheiro): escritório 3D + dados reais + agentes simulando decisões por 2 semanas.
+2. **Piloto**: hashrate alugado com orçamento pequeno definido por mim.
+3. **Escala**: só se o piloto for positivo depois das taxas. Inclui avaliar a hospedagem de ASICs.
+
+### Critérios de aceite
+- Painel mostra hashrate, receita, custo e lucro em BRL com fonte e horário.
+- Sistema roda 72h sem intervenção, se recupera de quedas e pausa sozinho quando dá prejuízo.
+- Testes automatizados para o cálculo de lucratividade e para os limites de gasto.
+- README explicando instalação, custos e riscos.
+
+Comece me fazendo perguntas sobre: orçamento, tarifa de energia, se terei ASICs e a carteira de recebimento. Depois apresente o plano técnico da Fase 1 antes de escrever código.
+
+## FIM DO PROMPT
