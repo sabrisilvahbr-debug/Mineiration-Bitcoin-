@@ -1,5 +1,7 @@
 # Escritório Virtual de Mineração: design (RASCUNHO)
 
+Fonte da ideia (do CEO): `docs/prompts/prompt_claude_mineracao_bitcoin_completo.md`. Este design só detalha o que está nela; onde divergir, a divergência está listada em "Alinhamento com a ideia" e precisa do OK do CEO.
+
 > Status: **rascunho**. As seções 1 e 2 foram aprovadas na conversa. As seções 3 em diante ainda não foram apresentadas. Nenhum código foi escrito.
 > Nada aqui é aconselhamento financeiro, jurídico ou tributário.
 
@@ -71,6 +73,34 @@ Contrato de mensagens (schemas Zod, validados na entrada e na saída):
 - Toda proposta do LLM traz `confianca` (0–1), `dados_usados` e `alternativas_descartadas`. Confiança abaixo de 0,7 escala para o Diretor; sem resolução, a ação padrão é pausar.
 - Textos externos entram como dado `untrusted`. O LLM nunca executa instruções vindas deles.
 - Limites do Guardião ficam em `guardian.config.json`, versionado e assinado com HMAC (segredo só do usuário). Agentes têm acesso somente leitura, e o ciclo se recusa a rodar se a assinatura não bater.
+
+## Alinhamento com a ideia (prompt completo)
+
+Como cada parte da ideia entra neste design:
+
+| Seção da ideia | Onde entra | Situação |
+|---|---|---|
+| 1. Regras de honestidade | Regras gerais; avisos no painel e no README | Mantida integralmente |
+| 2. Código calcula, LLM propõe, Guardião decide | Princípio do design | Mantida |
+| 3. Camada de Inteligência (3.1 a 3.6) | `src/intelligence/` | Detalhar na Seção 3 |
+| 4. Fontes de dados | `src/sources/` | Fase 1 usa só as públicas (mempool.space, corretora BR + 2ª fonte); NiceHash/Braiins e APIs de ASIC entram no Piloto |
+| 5. Frescor dos dados (60 s, 15 min, 2 min, 1,5%) | Guardião | Mantida; valores são ponto de partida, como a ideia diz |
+| 6. Arquitetura | Seções 1 e 2 | Ver divergências abaixo |
+| 7. Os 25 agentes | `src/agents/` | Fase 1: todos existem; os que dependem de ASIC, compra ou carteira (6, 7, 10, 11, 12, 13) rodam em simulação ou ficam em espera |
+| 8. Ciclo automático | `scripts/run-cycle.ts` | Divergência de frequência abaixo |
+| 9. Segurança | Guardião, `guardian.config.json` assinado, `untrusted` | Mantida; 2FA do painel entra antes de qualquer fase com dinheiro |
+| 10. Fases (Simulação, Piloto, Escala) | Estados globais | Entrega atual = Fase 1 |
+| 11. Critérios de aceite | Testes e README | Mantidos, com ressalva sobre as 72 h |
+| 12. Como trabalhar | Processo do CEO | Perguntas e aprovação do plano antes de codar |
+
+### Divergências da ideia (precisam do OK do CEO)
+
+1. **Frequência do ciclo:** a ideia pede 1–5 min e 24h/7. Com Vercel Hobby, o ciclo roda a cada 5 min via GitHub Actions (pode atrasar em horário de pico) e ao vivo, a cada 15–30 s, só com o painel aberto. O preço BTC/BRL pode ficar "sem dado" com o painel fechado.
+2. **Fila:** a ideia cita BullMQ/Redis ou Temporal. Aqui o barramento é a tabela `events` (funciona sem servidor permanente).
+3. **Hospedagem:** a ideia cita VPS ou nuvem com reinício automático e backup diário. Aqui é Vercel + Neon; o backup é o do plano do Neon (verificar o que o plano gratuito inclui).
+4. **Heartbeat por minuto e reinício após 3 min de silêncio:** não se aplica a funções serverless. Substituto proposto: registro do `agent_runs` a cada ciclo e alerta se um ciclo não rodar em 15 min.
+5. **Critério das 72 h sem intervenção:** testável como "72 h de ciclos de 5 min sem falha não tratada", não como processo contínuo.
+6. **Backend:** a ideia aceita Node/TypeScript ou Python; a escolha foi TypeScript.
 
 ## Pendente
 
