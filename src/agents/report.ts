@@ -33,7 +33,8 @@ export function buildReport(r: CycleResult): string {
   } else {
     lines.push(r.economics.message ?? "Sem custo informado: não há conta de lucratividade.");
   }
-  lines.push(r.decision ? `Decisão: ${r.decision}. ${r.decisionNote}` : r.decisionNote);
+  if (r.decision) lines.push(`Decisão: ${r.decision}. ${r.decisionNote}`);
+  else if (r.decisionNote && r.decisionNote !== r.economics.message) lines.push(r.decisionNote);
 
   if (r.scenarios.d30) {
     const s = r.scenarios.d30;

@@ -5,6 +5,7 @@ import type { AuditEntry } from "../audit/chain.ts";
 
 /** Armazenamento em memória: testes e uso sem banco (o histórico se perde ao reiniciar). */
 export class MemoryStore implements Store {
+  readonly durable = false;
   state: StoredState = { ...EMPTY_STATE };
   private spendByDay = new Map<string, number>();
   private audit: AuditEntry[] = [];
@@ -28,5 +29,9 @@ export class MemoryStore implements Store {
       margins: [...this.state.margins, result.economics.rented?.margin ?? null].slice(-20),
       spentTotalBrl: this.state.spentTotalBrl + spentBrl,
     };
+  }
+
+  async setManualPause(paused: boolean): Promise<void> {
+    this.state = { ...this.state, manualPause: paused };
   }
 }

@@ -1,0 +1,31 @@
+name: Ciclo dos agentes
+# Roda o ciclo completo a cada 5 min e grava no Neon. Só liga quando a variável CYCLE_ENABLED = true
+# (Settings > Secrets and variables > Actions > Variables). O GitHub pode atrasar execuções em horário de pico.
+on:
+  schedule:
+    - cron: "*/5 * * * *"
+  workflow_dispatch:
+permissions:
+  contents: read
+concurrency:
+  group: ciclo
+  cancel-in-progress: false
+jobs:
+  cycle:
+    if: ${{ vars.CYCLE_ENABLED == 'true' || github.event_name == 'workflow_dispatch' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 4
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --omit=dev --ignore-scripts --no-audit --no-fund
+      - name: Ciclo
+        run: node scripts/run-cycle.ts
+        env:
+          DATABASE_URL: ${{ secrets.DATABASE_URL }}
+          GUARDIAN_SECRET: ${{ secrets.GUARDIAN_SECRET }}
+          GUARDIAN_CONFIG_SIG: ${{ vars.GUARDIAN_CONFIG_SIG }}
+          CYCLE_INPUTS: ${{ vars.CYCLE_INPUTS }}
+          TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}

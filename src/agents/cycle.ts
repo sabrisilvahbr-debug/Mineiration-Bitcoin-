@@ -203,7 +203,7 @@ export async function runCycle(d: CycleDeps): Promise<CycleResult> {
   // Simulador (agente 25)
   let d30: ScenarioResult | null = null;
   let d90: ScenarioResult | null = null;
-  let scenarioNote = "informe os custos para simular.";
+  let scenarioNote = "sem custos informados ou sem dados de mercado confiáveis para simular.";
   if (current && d.withScenarios !== false && !refused && network.ok && verdict.priceBrl !== null && hp !== null) {
     const hist = await fetchPriceHistory(d.fetch, d.now);
     if (hist.ok) {

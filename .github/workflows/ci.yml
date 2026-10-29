@@ -1,0 +1,33 @@
+name: CI
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm install --no-audit --no-fund
+      - name: Tipos
+        run: npm run typecheck
+      - name: Testes
+        run: npm test
+      - name: Build do site
+        run: npm run build
+  sources:
+    # Confere ao vivo se as APIs reais ainda respondem no formato esperado (não bloqueia o deploy).
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm run verify:sources

@@ -1,0 +1,33 @@
+-- Escritório Virtual de Mineração: esquema da Fase 1 (Postgres/Neon). Execute uma vez.
+CREATE TABLE IF NOT EXISTS market_snapshots (
+  id BIGSERIAL PRIMARY KEY, kind TEXT NOT NULL, source TEXT NOT NULL, value JSONB NOT NULL,
+  collected_at TIMESTAMPTZ NOT NULL, age_seconds INTEGER, stale BOOLEAN NOT NULL DEFAULT FALSE
+);
+CREATE TABLE IF NOT EXISTS decisions (
+  id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL, action TEXT, margin DOUBLE PRECISION,
+  context JSONB NOT NULL, proposal JSONB, validation JSONB, result JSONB, confidence DOUBLE PRECISION
+);
+CREATE TABLE IF NOT EXISTS orders (
+  id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL, simulated BOOLEAN NOT NULL DEFAULT TRUE,
+  ph DOUBLE PRECISION NOT NULL, price_per_ph_day_brl DOUBLE PRECISION NOT NULL, cost_brl_day DOUBLE PRECISION NOT NULL, status TEXT NOT NULL DEFAULT 'simulada'
+);
+CREATE TABLE IF NOT EXISTS payouts (id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL, amount_sats BIGINT NOT NULL, txid TEXT);
+CREATE TABLE IF NOT EXISTS asset_status (id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL, asset TEXT NOT NULL, status JSONB NOT NULL);
+CREATE TABLE IF NOT EXISTS risk_events (id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL, state TEXT NOT NULL, reasons JSONB NOT NULL, actor TEXT NOT NULL);
+CREATE TABLE IF NOT EXISTS audit_log (
+  seq BIGINT PRIMARY KEY, ts TEXT NOT NULL, payload TEXT NOT NULL, prev_hash TEXT NOT NULL, hash TEXT NOT NULL
+);
+-- audit_log é somente inserção
+CREATE OR REPLACE FUNCTION audit_log_immutable() RETURNS trigger AS $$
+BEGIN RAISE EXCEPTION 'audit_log é imutável'; END; $$ LANGUAGE plpgsql;
+DROP TRIGGER IF EXISTS audit_log_no_change ON audit_log;
+CREATE TRIGGER audit_log_no_change BEFORE UPDATE OR DELETE ON audit_log FOR EACH ROW EXECUTE FUNCTION audit_log_immutable();
+CREATE TABLE IF NOT EXISTS provider_reputation (provider TEXT PRIMARY KEY, score INTEGER NOT NULL, rubric JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL);
+CREATE TABLE IF NOT EXISTS agent_runs (id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL, agent_id INTEGER NOT NULL, status TEXT NOT NULL, detail TEXT);
+CREATE TABLE IF NOT EXISTS system_state (key TEXT PRIMARY KEY, value JSONB NOT NULL, updated_at TIMESTAMPTZ NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS events (
+  id BIGSERIAL PRIMARY KEY, at TIMESTAMPTZ NOT NULL DEFAULT now(), origem TEXT NOT NULL, destino TEXT NOT NULL,
+  tipo TEXT NOT NULL, payload JSONB NOT NULL, correlation_id TEXT NOT NULL
+);
+CREATE INDEX IF NOT EXISTS idx_snapshots_kind_time ON market_snapshots (kind, collected_at DESC);
+CREATE INDEX IF NOT EXISTS idx_decisions_at ON decisions (at DESC);
