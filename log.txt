@@ -1,0 +1,4 @@
+[desktop-3d] canvas presente: sim; largura do documento 1280 / janela 1280
+[desktop-lista] canvas presente: não; largura do documento 1280 / janela 1280
+[celular-full] canvas presente: sim; largura do documento 390 / janela 390
+[celular-lista-full] canvas presente: não; largura do documento 390 / janela 390
