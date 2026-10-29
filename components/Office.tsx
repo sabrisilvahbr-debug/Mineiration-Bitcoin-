@@ -25,7 +25,12 @@ function Label({ text, position, width = 0.9, px = 256 }: { text: string; positi
       g.fillStyle = "rgba(0,0,0,0.72)";
       g.fillRect(0, 0, px, 96);
       g.fillStyle = "#ffffff";
-      g.font = "bold 52px system-ui, sans-serif";
+      let size = 52;
+      g.font = `bold ${size}px system-ui, sans-serif`;
+      while (g.measureText(text).width > px - 24 && size > 14) {
+        size -= 2;
+        g.font = `bold ${size}px system-ui, sans-serif`;
+      }
       g.textAlign = "center";
       g.textBaseline = "middle";
       g.fillText(text, px / 2, 50);
@@ -96,7 +101,7 @@ function ServerRoom({ label }: { label: string }) {
 
 export default function Office(props: { agents: AgentRuntime[]; hashrateLabel: string; selectedId: number | null; onSelect: (id: number) => void }) {
   return (
-    <Canvas camera={{ position: [0, 11, 14.5], fov: 50 }} dpr={[1, 2]}>
+    <Canvas camera={{ position: [0, 9.5, 12], fov: 50 }} dpr={[1, 2]}>
       <color attach="background" args={["#0b1220"]} />
       <ambientLight intensity={0.8} />
       <directionalLight position={[6, 10, 6]} intensity={1.1} />
@@ -108,7 +113,7 @@ export default function Office(props: { agents: AgentRuntime[]; hashrateLabel: s
       {props.agents.map((a) => (
         <Desk key={a.id} agent={a} selected={props.selectedId === a.id} onSelect={props.onSelect} />
       ))}
-      <OrbitControls enablePan={false} minDistance={6} maxDistance={26} maxPolarAngle={Math.PI / 2.1} target={[0, 0.5, -0.5]} />
+      <OrbitControls enablePan={false} minDistance={6} maxDistance={26} maxPolarAngle={Math.PI / 2.1} target={[0, 0.5, -1]} />
     </Canvas>
   );
 }

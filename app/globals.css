@@ -18,15 +18,17 @@ h1 { font-size: 1.25rem; margin: 0; } h2 { font-size: 1rem; margin: 0 0 8px; }
 .scroll-x { overflow-x: auto; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
 .stat { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
-.stat:last-child { border-bottom: 0; } .stat span:first-child { color: var(--muted); }
+.stat:last-child { border-bottom: 0; } .stat > span:first-child { color: var(--muted); }
 .stat b { text-align: right; font-variant-numeric: tabular-nums; }
 .src { display: block; color: var(--muted); font-size: .78rem; font-weight: 400; }
 .badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 600; font-size: .8rem; border: 1px solid currentColor; }
 .NORMAL { color: var(--ok); } .CAUTELA { color: var(--warn); } .PAUSADO_RISCO, .PAUSADO_MANUAL { color: var(--bad); }
 .loss { color: var(--bad); } .gain { color: var(--ok); } .muted { color: var(--muted); }
-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+form input, form select, form button { width: 100%; }
+.tabs button { flex: 1; }
 label { display: grid; min-width: 0; gap: 2px; font-size: .8rem; color: var(--muted); }
-input, select, button { min-width: 0; width: 100%; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-height: 40px; }
+input, select, button { min-width: 0; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-height: 40px; }
 button { cursor: pointer; background: var(--accent); color: #fff; border-color: transparent; font-weight: 600; }
 button.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
 button.danger { background: var(--bad); }
