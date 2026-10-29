@@ -67,14 +67,14 @@ export default function Panel({ r }: { r: CycleResult }) {
       <section className="card">
         <h2>Cenários (lucro acumulado)</h2>
         {r.scenarios.d30 && r.scenarios.d90 ? (
-          <table>
+          <div className="scroll-x"><table>
             <thead><tr><th>Horizonte</th><th>Pessimista (P5)</th><th>Base</th><th>Otimista (P95)</th><th>Prob. prejuízo</th></tr></thead>
             <tbody>
               {[r.scenarios.d30, r.scenarios.d90].map((s) => (
                 <tr key={s.days}><td>{s.days} dias</td><td>{brl(s.p5)}</td><td>{brl(s.median)}</td><td>{brl(s.p95)}</td><td>{pct(s.probLoss, 0)}</td></tr>
               ))}
             </tbody>
-          </table>
+          </table></div>
         ) : <p className="muted" style={{ margin: 0 }}>Sem dado: {r.scenarios.note}</p>}
         <p className="src" style={{ marginTop: 8 }}>{r.scenarios.premises}</p>
       </section>

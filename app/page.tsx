@@ -111,7 +111,7 @@ export default function Home() {
             </section>
             <Panel r={r} />
           </div>
-          <div style={{ display: "grid", gap: 16, alignContent: "start" }}>
+          <div className="col-office" style={{ display: "grid", gap: 16, alignContent: "start" }}>
             <section>
               <div className="tabs" role="tablist">
                 <button type="button" className={view === "3d" ? "" : "secondary"} onClick={() => setView("3d")}>Escritório 3D</button>

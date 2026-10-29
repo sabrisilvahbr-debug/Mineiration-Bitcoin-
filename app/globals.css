@@ -7,12 +7,15 @@
 }
 * { box-sizing: border-box; }
 html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
-main { max-width: 1280px; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+main { max-width: 1280px; width: 100%; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
 h1 { font-size: 1.25rem; margin: 0; } h2 { font-size: 1rem; margin: 0 0 8px; }
 .top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
 .disclaimer { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 8px; padding: 10px 12px; color: var(--muted); font-size: .9rem; }
 .grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
-@media (min-width: 960px) { .grid { grid-template-columns: 420px 1fr; } }
+@media (min-width: 960px) { .grid { grid-template-columns: minmax(0, 420px) minmax(0, 1fr); } }
+.grid > * { min-width: 0; }
+@media (max-width: 959px) { .col-office { order: -1; } }
+.scroll-x { overflow-x: auto; }
 .card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
 .stat { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
 .stat:last-child { border-bottom: 0; } .stat span:first-child { color: var(--muted); }
@@ -22,8 +25,8 @@ h1 { font-size: 1.25rem; margin: 0; } h2 { font-size: 1rem; margin: 0 0 8px; }
 .NORMAL { color: var(--ok); } .CAUTELA { color: var(--warn); } .PAUSADO_RISCO, .PAUSADO_MANUAL { color: var(--bad); }
 .loss { color: var(--bad); } .gain { color: var(--ok); } .muted { color: var(--muted); }
 form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
-label { display: grid; gap: 2px; font-size: .8rem; color: var(--muted); }
-input, select, button { font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-height: 40px; }
+label { display: grid; min-width: 0; gap: 2px; font-size: .8rem; color: var(--muted); }
+input, select, button { min-width: 0; width: 100%; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-height: 40px; }
 button { cursor: pointer; background: var(--accent); color: #fff; border-color: transparent; font-weight: 600; }
 button.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
 button.danger { background: var(--bad); }
