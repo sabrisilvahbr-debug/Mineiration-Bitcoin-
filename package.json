@@ -4,11 +4,17 @@
   "private": true,
   "type": "module",
   "description": "Escritório Virtual de Trading: 25 agentes, dados reais, paper trading com Guardião de risco",
-  "engines": { "node": ">=22.18" },
+  "engines": {
+    "node": ">=22.18"
+  },
   "scripts": {
     "test": "node --test \"tests/**/*.test.ts\"",
     "typecheck": "tsc --noEmit",
     "verify:sources": "node scripts/verify-sources.ts",
     "backtest": "node scripts/run-backtest.ts"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typescript": "^5.8.3"
   }
 }
