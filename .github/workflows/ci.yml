@@ -10,7 +10,12 @@ jobs:
         with: { node-version: 22 }
       - run: npm install --no-audit --no-fund
       - name: Tipos
-        run: npm run typecheck
+        run: |
+          set +e
+          npm run typecheck 2>&1 | tee tc.txt
+          code=${PIPESTATUS[0]}
+          echo "::notice title=Tipos (exit $code)::$(grep -E "error TS|\.tsx?\(" tc.txt | head -30 | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')"
+          exit $code
       - name: Testes
         run: |
           set +e
