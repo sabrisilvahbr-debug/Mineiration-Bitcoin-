@@ -10,7 +10,8 @@ Aplicação web em que **25 agentes** acompanham mineração de Bitcoin com **da
 
 ## O que já funciona (Fase 1)
 
-- **Dados reais** (conferidos ao vivo pelo CI): rede e dificuldade (mempool.space), preço BTC/BRL em **duas fontes** (Mercado Bitcoin e Coinbase) com divergência, histórico diário em BRL.
+- **Dados reais** (conferidos ao vivo pelo CI): rede e dificuldade (mempool.space), preço BTC/BRL em **duas fontes** (Mercado Bitcoin e Coinbase) com divergência, histórico diário em BRL, **preço real de aluguel de hashrate** (NiceHash SHA256) e a **margem de alugar vs. hashprice**.
+- **Carteira real (só leitura):** cole um endereço BTC de autocustódia e o painel mostra o **total recebido on-chain** — o "total de bitcoins encontrados" real, sem chaves e sem permissão de saque. Veja `docs/CONEXAO-REAL.md`.
 - **Motor de lucratividade** (código puro, testado): receita, custo, margem, ponto de equilíbrio, histerese de pausa/retomada, probabilidade de achar bloco.
 - **Cenários** pessimista/base/otimista (Monte Carlo com semente fixa, volatilidade do histórico real).
 - **Guardião de risco**: frescor dos dados, divergência de preço, limites de gasto, estados `NORMAL / CAUTELA / PAUSADO_RISCO / PAUSADO_MANUAL`, config assinada (HMAC) e trilha de auditoria com hash encadeado.
@@ -70,7 +71,8 @@ O botão **Pausa geral** do painel pede o `PAUSE_SECRET` e grava a pausa no banc
 
 ## O que ainda NÃO existe (honestidade)
 
-- Compra real de hashrate (NiceHash/Braiins), pools, ASICs, tesoureiro, contador DeCripto e agentes com LLM: **em espera** (aparecem assim no escritório, com o motivo).
+- **Compra real** de hashrate (ordens de verdade no NiceHash com a sua chave sem saque): ainda não — as ordens são **simuladas**. O preço de aluguel já é lido ao vivo e, como hoje dá prejuízo, o sistema não compraria mesmo. Próximo bloco quando a margem justificar.
+- Pools, ASICs, contador DeCripto e agentes com LLM: **em espera** (aparecem assim no escritório, com o motivo).
 - Fonte externa de hashprice (Hashrate Index): usa o cálculo próprio (subsídio + taxas dos últimos 144 blocos).
 - Alertas por Telegram/e-mail: só no painel por enquanto.
 - Conexão real com o Neon: o código de gravação foi escrito mas **não foi testado contra um banco real** (os testes usam memória). Rode a migração e confira o primeiro ciclo.
