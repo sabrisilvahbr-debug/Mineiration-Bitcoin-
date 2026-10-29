@@ -45,6 +45,45 @@ export default function Panel({ r }: { r: CycleResult }) {
       </section>
 
       <section className="card">
+        <h2>Alugar hashrate agora (dado real — NiceHash)</h2>
+        {r.rental.ok && r.rentalMargin ? (
+          <>
+            <Stat label="Preço de mercado" src={`${r.rental.source} · ${age(r.rental.collectedAt, r.at)} atrás · ${r.rental.value.activeOrders} ordens`}>
+              {num(r.rental.value.marketSatsPerPhDay, 0)} sats/PH/dia
+            </Stat>
+            <Stat label="Receita (hashprice)">{num(r.rentalMargin.revenueSatsPerPhDay, 0)} sats/PH/dia</Stat>
+            <Stat label="Margem bruta (antes das taxas)">
+              <span className={r.rentalMargin.profitable ? "gain" : "loss"}>{pct(r.rentalMargin.grossMarginPct)}</span>
+            </Stat>
+            {!r.rentalMargin.profitable && (
+              <p className="notice" style={{ margin: "8px 0 0" }}>
+                Alugar SHA256 <b>dá prejuízo</b> ao preço de mercado atual: o sistema não compra. Isso te protege de gastar à toa.
+              </p>
+            )}
+          </>
+        ) : (
+          <p className="muted" style={{ margin: 0 }}>Sem dado de aluguel: {r.rental.ok ? "sem hashprice para comparar" : r.rental.error}</p>
+        )}
+      </section>
+
+      <section className="card">
+        <h2>Resultado real (sua carteira)</h2>
+        <Stat label="BTC recebidos (on-chain)" src={r.wallet?.ok ? `${r.wallet.source} · ${age(r.wallet.collectedAt, r.at)} atrás` : r.realConnected ? "conta conectada" : "nenhuma carteira conectada"}>
+          {r.realConnected ? `${num(r.totalBtcFound, 8)} BTC` : "0 — sem mineração real"}
+        </Stat>
+        {r.wallet?.ok && <Stat label="Saldo atual">{num(r.wallet.value.balanceBtc, 8)} BTC em {r.wallet.value.txCount} transações</Stat>}
+        <Stat label="Valor em reais">
+          {r.realConnected && r.verdict.priceBrl !== null ? brl(r.totalBtcFound * r.verdict.priceBrl) : "—"}
+        </Stat>
+        {!r.realConnected && (
+          <p className="muted" style={{ margin: "6px 0 0" }}>
+            Cole acima o endereço BTC que recebe os pagamentos (autocustódia). O sistema lê o total recebido on-chain — número real, sem chaves e sem permissão de saque. Nenhum valor é inventado.
+          </p>
+        )}
+        {r.wallet && !r.wallet.ok && <p className="notice" style={{ margin: "6px 0 0" }}>Carteira não lida: {r.wallet.error}</p>}
+      </section>
+
+      <section className="card">
         <h2>Conta do dia (com os custos que você informou)</h2>
         {e ? (
           <>

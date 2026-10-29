@@ -4,6 +4,10 @@ import { fetchNetwork } from "../sources/mempool.ts";
 import type { NetworkSnapshot } from "../sources/mempool.ts";
 import { fetchPrices } from "../sources/price.ts";
 import { fetchPriceHistory } from "../sources/history.ts";
+import { fetchNicehashRental, rentalMargin } from "../sources/rental.ts";
+import type { RentalInfo, RentalMargin } from "../sources/rental.ts";
+import { fetchWallet } from "../sources/wallet.ts";
+import type { WalletInfo } from "../sources/wallet.ts";
 import { evaluateGuardian } from "../guardian/freshness.ts";
 import type { GuardianVerdict, MarketView } from "../guardian/freshness.ts";
 import type { LoadedConfig, Mode } from "../guardian/config.ts";
@@ -63,6 +67,12 @@ export interface CycleResult {
   decisionNote: string;
   scenarios: { d30: ScenarioResult | null; d90: ScenarioResult | null; note: string; premises: string };
   forecast: Forecast | null;
+  rental: Reading<RentalInfo>;
+  rentalMargin: RentalMargin | null;
+  wallet: Reading<WalletInfo> | null;
+  /** BTC realmente encontrados/recebidos (saldo real). 0 e sem conta conectada na Fase 1 — nunca inventado. */
+  totalBtcFound: number;
+  realConnected: boolean;
   orders: SimOrder[];
   agents: AgentRuntime[];
   report: string;
@@ -102,6 +112,9 @@ export async function runCycle(d: CycleDeps): Promise<CycleResult> {
     ? { ok: false, source: "mempool.space", collectedAt: at, error: "ciclo recusado pelo Guardião" }
     : await fetchNetwork(d.fetch, d.now);
   const prices: Array<Reading<number>> = refused ? [] : await fetchPrices(d.fetch, d.now);
+  const rental: Reading<RentalInfo> = refused
+    ? { ok: false, source: "NiceHash (marketplace SHA256ASICBOOST)", collectedAt: at, error: "ciclo recusado pelo Guardião" }
+    : await fetchNicehashRental(d.fetch, d.now);
 
   const view: MarketView = {
     prices: prices.flatMap((p) => (p.ok ? [{ source: p.source, value: p.value, collectedAt: p.collectedAt }] : [])),
@@ -244,6 +257,17 @@ export async function runCycle(d: CycleDeps): Promise<CycleResult> {
     };
   }
 
+  // Margem real de alugar hashrate ao preço de mercado (antes das taxas), por PH/s.
+  const rMargin =
+    rental.ok && network.ok ? rentalMargin(rental.value.marketSatsPerPhDay, network.value.hashpriceSatsPerPhDay) : null;
+
+  // BTC realmente encontrados/recebidos: carteira on-chain (só leitura) informada pelo CEO.
+  const wallet: Reading<WalletInfo> | null =
+    d.inputs.wallet && !refused ? await fetchWallet(d.fetch, d.inputs.wallet, d.now) : null;
+  const totalBtcFound = wallet?.ok ? wallet.value.receivedBtc : stored.totalBtcFound;
+  const realConnected = wallet?.ok ? true : stored.realConnected;
+  if (wallet && !wallet.ok) notices.push(`Carteira informada não pôde ser lida: ${wallet.error}`);
+
   // Auditor (agente 16) e trilha de auditoria
   const chainOk = verifyTail(stored.auditTail).ok;
   if (!chainOk) notices.push("CRÍTICO: cadeia de auditoria inconsistente.");
@@ -258,7 +282,7 @@ export async function runCycle(d: CycleDeps): Promise<CycleResult> {
     orders: orders.length,
   }, at);
 
-  const agents = buildAgents({ verdict, network, prices, rented, asic, decision, orders, d30, forecast, chainOk, loaded: d.loaded, env, inputs: d.inputs, notices });
+  const agents = buildAgents({ verdict, network, prices, rented, asic, decision, orders, d30, forecast, rental, rMargin, wallet, chainOk, loaded: d.loaded, env, inputs: d.inputs, notices });
 
   const result: CycleResult = {
     at,
@@ -273,6 +297,11 @@ export async function runCycle(d: CycleDeps): Promise<CycleResult> {
     decisionNote,
     scenarios: { d30, d90, note: scenarioNote, premises: PREMISES },
     forecast,
+    rental,
+    rentalMargin: rMargin,
+    wallet,
+    totalBtcFound,
+    realConnected,
     orders,
     agents,
     report: "",
@@ -294,6 +323,9 @@ interface Ctx {
   orders: SimOrder[];
   d30: ScenarioResult | null;
   forecast: Forecast | null;
+  rental: Reading<RentalInfo>;
+  rMargin: RentalMargin | null;
+  wallet: Reading<WalletInfo> | null;
   chainOk: boolean;
   loaded: LoadedConfig;
   env: Record<string, string | undefined>;
@@ -316,12 +348,22 @@ function buildAgents(c: Ctx): AgentRuntime[] {
         return okPrices === 2 ? ["trabalhando", "Duas fontes de preço frescas"] : okPrices === 1 ? ["alerta", "Só uma fonte respondeu: sem conferência"] : ["alerta", "Nenhuma fonte de preço respondeu"];
       case 5:
         return c.rented || c.asic ? ["trabalhando", `Margem calculada${c.decision ? `; recomendação: ${c.decision}` : ""}`] : ["ocioso", "Aguardando custos informados pelo CEO"];
-      case 6:
-        return paused ? ["pausado_risco", "Compras suspensas pelo Guardião"] : c.orders.length ? ["trabalhando", "Ordem simulada registrada"] : ["ocioso", c.verdict.purchasesAllowed ? `Sem ordem: decisão = ${c.decision ?? "sem decisão"}` : "Sem orçamento aprovado ou compras bloqueadas"];
+      case 6: {
+        const mkt = c.rental.ok && c.rMargin
+          ? `Mercado NiceHash: ${Math.round(c.rental.value.marketSatsPerPhDay)} sats/PH/dia, margem bruta ${(c.rMargin.grossMarginPct * 100).toFixed(1)}%${c.rMargin.profitable ? "" : " (alugar dá prejuízo agora)"}`
+          : c.rental.ok ? "Preço de aluguel lido; sem hashprice para comparar" : `Sem preço de aluguel: ${c.rental.error}`;
+        if (paused) return ["pausado_risco", `Compras suspensas pelo Guardião. ${mkt}`];
+        if (c.orders.length) return ["trabalhando", `Ordem simulada registrada. ${mkt}`];
+        return ["ocioso", mkt];
+      }
       case 7:
         return paused ? ["pausado_risco", "Ordens simuladas pausadas"] : ["ocioso", "Sem ordens simuladas ativas"];
       case 12:
         return c.inputs.asic ? ["trabalhando", "Custo de energia calculado com a tarifa informada"] : ["em_espera", "Aguardando tarifa e consumo informados pelo CEO"];
+      case 13:
+        if (c.wallet?.ok) return ["trabalhando", `Carteira (só leitura): recebido ${c.wallet.value.receivedBtc.toFixed(8)} BTC, saldo ${c.wallet.value.balanceBtc.toFixed(8)} BTC`];
+        if (c.wallet && !c.wallet.ok) return ["alerta", `Carteira não lida: ${c.wallet.error}`];
+        return ["em_espera", "Informe um endereço BTC de autocustódia para ver saldo e recebimentos reais"];
       case 14:
         return c.verdict.state === "NORMAL" ? ["trabalhando", "Limites e frescor conferidos"] : c.verdict.state === "CAUTELA" ? ["alerta", c.verdict.reasons[0] ?? "Cautela"] : ["pausado_risco", c.verdict.reasons[0] ?? "Pausa"];
       case 15:

@@ -32,6 +32,8 @@ function makeFetch(down: string[] = []): { f: FetchLike; calls: string[] } {
     if (url.includes("tickers")) return body([{ pair: "BTC-BRL", last: "400000" }]);
     if (url.includes("coinbase.com/v2")) return body({ data: { amount: "400500", currency: "BRL" } });
     if (url.includes("mercadobitcoin.net/api/v4/candles")) return body(mbCandles);
+    if (url.includes("orders/active2")) return body({ list: [{ id: "a", price: 0.47, speedLimit: 0.003, acceptedCurrentSpeed: 0.003, alive: true }] });
+    if (url.includes("/api/address/")) return body({ address: "bc1q", chain_stats: { funded_txo_sum: 25000000, spent_txo_sum: 5000000, tx_count: 7 }, mempool_stats: {} });
     return { ok: false, status: 404, json: async () => ({}), text: async () => "" };
   };
   return { f, calls };
@@ -159,6 +161,34 @@ test("só uma fonte de preço: CAUTELA, preço exibido, sem ordem", async () => 
   assert.equal(r.verdict.state, "CAUTELA");
   assert.equal(r.verdict.priceBrl, 400000);
   assert.deepEqual(r.orders, []);
+});
+
+test("aluguel real integrado: margem bruta negativa quando preço > hashprice, sem ordens", async () => {
+  const r = await runCycle({ fetch: makeFetch().f, now, loaded: signed, inputs: profitable, store: new MemoryStore() });
+  assert.equal(r.rental.ok, true);
+  assert.ok(r.rentalMargin);
+  // hashprice do fixture ~46080/1e6... na verdade price 0.47 BTC/EH = 47000 sats/PH; hashprice do fixture:
+  // reward 46080000000/144 *144 /1e6 = 46080 sats/PH. Aluguel 47000 > 46080 → prejuízo.
+  assert.equal(r.rentalMargin!.profitable, false);
+  assert.ok(r.rentalMargin!.grossMarginPct < 0);
+  assert.equal(r.agents.find((a) => a.id === 6)?.detail.includes("prejuízo"), true);
+});
+
+test("carteira conectada: totalBtcFound e realConnected vêm do on-chain real", async () => {
+  const withWallet = { ...profitable, wallet: "bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq" };
+  const r = await runCycle({ fetch: makeFetch().f, now, loaded: signed, inputs: withWallet, store: new MemoryStore() });
+  assert.equal(r.realConnected, true);
+  assert.equal(r.totalBtcFound, 0.25); // 25000000 sats
+  assert.equal(r.wallet?.ok, true);
+  assert.equal(r.agents.find((a) => a.id === 13)?.status, "trabalhando");
+  assert.match(r.report, /0\.25000000 BTC|0,25/);
+});
+
+test("sem carteira: BTC encontrados = 0, nunca inventado", async () => {
+  const r = await runCycle({ fetch: makeFetch().f, now, loaded: signed, inputs: profitable, store: new MemoryStore() });
+  assert.equal(r.realConnected, false);
+  assert.equal(r.totalBtcFound, 0);
+  assert.match(r.report, /nenhuma mineração real/);
 });
 
 test("auditoria: verifyTail aceita trecho íntegro e rejeita adulterado", () => {

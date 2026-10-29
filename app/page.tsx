@@ -5,7 +5,32 @@ import type { FormEvent } from "react";
 import type { CycleResult } from "../src/agents/cycle.ts";
 import Panel from "../components/Panel.tsx";
 import { AgentCard, AgentList, Legend } from "../components/AgentList.tsx";
-import { num } from "../components/format.ts";
+import type { OfficeStats } from "../components/Office.tsx";
+import { brl, num, pct } from "../components/format.ts";
+
+/** Monta os números do painel 3D a partir do resultado real. Sem dado → "sem dado", nunca inventado. */
+function buildStats(r: CycleResult): OfficeStats {
+  const lines: OfficeStats["lines"] = [];
+  lines.push({ label: "Hashrate da rede", value: r.network.ok ? `${num(r.network.value.networkEhs, 0)} EH/s` : "sem dado", tone: "neutral" });
+  lines.push({ label: "Hashprice", value: r.network.ok ? `${num(r.network.value.hashpriceSatsPerPhDay, 0)} sats/PH/dia` : "sem dado", tone: "neutral" });
+  if (r.rental.ok && r.rentalMargin) {
+    lines.push({ label: "Aluguel (NiceHash)", value: `${num(r.rental.value.marketSatsPerPhDay, 0)} sats/PH/dia`, tone: "neutral" });
+    lines.push({ label: "Margem do aluguel", value: pct(r.rentalMargin.grossMarginPct), tone: r.rentalMargin.profitable ? "good" : "bad" });
+  } else {
+    lines.push({ label: "Aluguel (NiceHash)", value: "sem dado", tone: "neutral" });
+  }
+  lines.push({
+    label: "BTC encontrados",
+    value: r.realConnected ? `${num(r.totalBtcFound, 8)} BTC` : "0 (sem mineração real)",
+    tone: "neutral",
+  });
+  lines.push({
+    label: "Lucro real",
+    value: r.realConnected && r.verdict.priceBrl !== null ? brl(r.totalBtcFound * r.verdict.priceBrl) : "—",
+    tone: "neutral",
+  });
+  return { title: `Estado: ${r.verdict.state.replace("_", " ")}`, lines };
+}
 
 const Office = dynamic(() => import("../components/Office.tsx"), {
   ssr: false,
@@ -73,7 +98,7 @@ export default function Home() {
 
   const r = data?.result;
   const sel = r?.agents.find((a) => a.id === selected) ?? null;
-  const hashLabel = r?.network.ok ? `${num(r.network.value.networkEhs, 0)} EH/s na rede` : "sem dado da rede";
+  const stats = r ? buildStats(r) : { title: "Escritório de Mineração", lines: [] };
 
   return (
     <main>
@@ -104,7 +129,10 @@ export default function Home() {
                     <option>FPPS</option><option>PPLNS</option><option>SOLO</option>
                   </select>
                 </label>
-                <button type="submit" style={{ alignSelf: "end" }}>Calcular</button>
+                <label style={{ gridColumn: "1 / -1" }}>Carteira BTC (autocustódia, só leitura)
+                  <input inputMode="text" placeholder="bc1... — endereço que recebe os pagamentos" value={form["carteira"] ?? ""} onChange={(e) => setForm({ ...form, carteira: e.target.value })} />
+                </label>
+                <button type="submit" style={{ gridColumn: "1 / -1" }}>Calcular</button>
               </form>
               {data?.inputErrors.map((x) => <p key={x} className="notice" style={{ margin: "8px 0 0" }}>{x}</p>)}
               <p className="src" style={{ marginTop: 8 }}>Nenhuma taxa ou custo é presumido: sem estes campos não há conta.</p>
@@ -118,7 +146,17 @@ export default function Home() {
                 <button type="button" className={view === "lista" ? "" : "secondary"} onClick={() => setView("lista")}>Lista dos 25 agentes</button>
               </div>
               {view === "3d" ? (
-                <div className="office"><Office agents={r.agents} hashrateLabel={hashLabel} selectedId={selected} onSelect={setSelected} /></div>
+                <div className="office">
+                  <Office agents={r.agents} stats={stats} selectedId={selected} onSelect={setSelected} />
+                  <div className="hud" aria-hidden>
+                    {stats.lines.slice(0, 4).map((l) => (
+                      <div key={l.label} className="hud-chip">
+                        <span>{l.label}</span>
+                        <b className={l.tone === "good" ? "gain" : l.tone === "bad" ? "loss" : ""}>{l.value}</b>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               ) : (
                 <AgentList agents={r.agents} selectedId={selected} onSelect={setSelected} />
               )}

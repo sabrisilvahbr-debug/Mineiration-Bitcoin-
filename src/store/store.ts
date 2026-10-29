@@ -11,6 +11,10 @@ export interface StoredState {
   spentTodayBrl: number;
   spentTotalBrl: number;
   manualPause: boolean;
+  /** BTC realmente recebidos (pagamentos reais). 0 enquanto não houver conta conectada. */
+  totalBtcFound: number;
+  /** true quando uma conta real (só leitura) está conectada e respondendo. */
+  realConnected: boolean;
 }
 
 export interface Store {
@@ -29,6 +33,8 @@ export const EMPTY_STATE: StoredState = {
   spentTodayBrl: 0,
   spentTotalBrl: 0,
   manualPause: false,
+  totalBtcFound: 0,
+  realConnected: false,
 };
 
 /** Envolve um Store para leitura apenas: usado pelo painel, que não deve gravar a cada atualização. */

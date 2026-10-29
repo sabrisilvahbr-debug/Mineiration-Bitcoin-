@@ -25,6 +25,20 @@ export function buildReport(r: CycleResult): string {
     lines.push(`Rede: sem dado (${r.network.error}).`);
   }
 
+  if (r.rental.ok && r.rentalMargin) {
+    const rm = r.rentalMargin;
+    lines.push(
+      `Aluguel de hashrate (NiceHash, dado real): preço de mercado ${num(r.rental.value.marketSatsPerPhDay, 0)} sats/PH/dia vs. receita ${num(rm.revenueSatsPerPhDay, 0)} sats/PH/dia. Margem bruta ${num(rm.grossMarginPct * 100, 1)}% (antes das taxas). ${rm.profitable ? "Alugar teria lucro bruto agora." : "Alugar dá prejuízo agora: o sistema não compra."}`,
+    );
+  } else if (!r.rental.ok) {
+    lines.push(`Aluguel de hashrate: sem dado (${r.rental.error}).`);
+  }
+  lines.push(
+    r.realConnected
+      ? `BTC realmente recebidos (conta conectada): ${num(r.totalBtcFound, 8)} BTC.`
+      : "BTC encontrados: 0 — nenhuma mineração real nesta fase (conecte uma conta para ver valores reais).",
+  );
+
   const e = r.economics.rented ?? r.economics.asic;
   if (e) {
     const m = e.margin === null ? "indefinida" : `${num(e.margin * 100, 1)}%`;

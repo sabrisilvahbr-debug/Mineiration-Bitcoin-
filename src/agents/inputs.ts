@@ -5,6 +5,8 @@ export interface UserInputs {
   rented?: Pick<RentedInput, "ph" | "pricePerPhDayBrl" | "poolFee" | "platformFee">;
   asic?: Pick<AsicInput, "ph" | "kw" | "tariffBrlKwh" | "hostingBrlDay" | "maintenanceBrlDay" | "poolFee">;
   poolMethod: PoolMethod;
+  /** Endereço BTC de autocustódia que recebe os pagamentos (só leitura on-chain). */
+  wallet?: string;
 }
 
 export interface ParsedInputs {
@@ -39,6 +41,8 @@ export function parseInputs(q: URLSearchParams): ParsedInputs {
   if (!["FPPS", "PPLNS", "SOLO"].includes(metodoRaw)) errors.push("metodo: use FPPS, PPLNS ou SOLO");
 
   const inputs: UserInputs = { poolMethod };
+  const carteira = (q.get("carteira") ?? "").trim();
+  if (carteira) inputs.wallet = carteira;
   // Aluguel só existe se o CEO informou PH, preço e as duas taxas (nenhuma taxa é presumida).
   if (ph !== undefined && preco !== undefined && taxaPool !== undefined && taxaPlat !== undefined) {
     inputs.rented = { ph, pricePerPhDayBrl: preco, poolFee: taxaPool / 100, platformFee: taxaPlat / 100 };

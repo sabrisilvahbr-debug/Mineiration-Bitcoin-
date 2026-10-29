@@ -85,16 +85,81 @@ function Desk({ agent, selected, onSelect }: { agent: AgentRuntime; selected: bo
   );
 }
 
-function ServerRoom({ label }: { label: string }) {
+export interface ScreenLine {
+  label: string;
+  value: string;
+  tone?: "good" | "bad" | "neutral";
+}
+export interface OfficeStats {
+  title: string;
+  lines: ScreenLine[];
+}
+
+/** Parede de telas da sala de servidores, desenhada em canvas (sem DOM), com números reais. */
+function VideoWall({ stats }: { stats: OfficeStats }) {
+  const texture = useMemo(() => {
+    const W = 1024;
+    const H = 512;
+    const c = document.createElement("canvas");
+    c.width = W;
+    c.height = H;
+    const g = c.getContext("2d");
+    if (g) {
+      g.fillStyle = "#06101f";
+      g.fillRect(0, 0, W, H);
+      g.fillStyle = "#0b1a30";
+      g.fillRect(10, 10, W - 20, H - 20);
+      g.fillStyle = "#1b6ef3";
+      g.fillRect(10, 10, W - 20, 70);
+      g.fillStyle = "#ffffff";
+      g.font = "bold 40px system-ui, sans-serif";
+      g.textBaseline = "middle";
+      g.fillText(stats.title, 32, 46);
+      g.font = "32px system-ui, sans-serif";
+      const rows = stats.lines.slice(0, 6);
+      rows.forEach((ln, i) => {
+        const y = 128 + i * 60;
+        g.fillStyle = "#9fb3cc";
+        g.textAlign = "left";
+        g.fillText(ln.label, 32, y);
+        g.fillStyle = ln.tone === "good" ? "#3ecf8e" : ln.tone === "bad" ? "#ff6b66" : "#eaf1fb";
+        g.font = "bold 34px system-ui, sans-serif";
+        g.textAlign = "right";
+        g.fillText(ln.value, W - 32, y);
+        g.font = "32px system-ui, sans-serif";
+      });
+      g.textAlign = "left";
+    }
+    return new CanvasTexture(c);
+  }, [stats]);
+  useEffect(() => () => texture.dispose(), [texture]);
   return (
     <group position={[0, 0, -8.5]}>
-      {[-3, -1.5, 0, 1.5, 3].map((x) => (
-        <mesh key={x} position={[x, 1, 0]}>
-          <boxGeometry args={[1.1, 2, 0.9]} />
-          <meshStandardMaterial color="#1f2937" emissive="#1b6ef3" emissiveIntensity={0.25} />
-        </mesh>
+      {/* parede */}
+      <mesh position={[0, 2.4, -0.2]}>
+        <boxGeometry args={[12, 5.2, 0.2]} />
+        <meshStandardMaterial color="#0a1524" />
+      </mesh>
+      {/* tela principal com números reais */}
+      <mesh position={[0, 3, 0]}>
+        <planeGeometry args={[7, 3.5]} />
+        <meshBasicMaterial map={texture} toneMapped={false} />
+      </mesh>
+      {/* racks de servidores com luzes */}
+      {[-4.6, -3.4, 3.4, 4.6].map((x) => (
+        <group key={x} position={[x, 1, 0]}>
+          <mesh>
+            <boxGeometry args={[1, 2, 0.9]} />
+            <meshStandardMaterial color="#111c2e" metalness={0.3} roughness={0.6} emissive="#1b6ef3" emissiveIntensity={0.12} />
+          </mesh>
+          {[0.6, 0.2, -0.2, -0.6].map((y) => (
+            <mesh key={y} position={[0.35, y, 0.46]}>
+              <boxGeometry args={[0.12, 0.12, 0.05]} />
+              <meshStandardMaterial color="#3ecf8e" emissive="#3ecf8e" emissiveIntensity={0.9} />
+            </mesh>
+          ))}
+        </group>
       ))}
-      <Label text={`Sala de servidores · ${label}`} position={[0, 2.6, 0]} width={5.2} px={1024} />
     </group>
   );
 }
@@ -112,18 +177,22 @@ function Rig() {
   return null;
 }
 
-export default function Office(props: { agents: AgentRuntime[]; hashrateLabel: string; selectedId: number | null; onSelect: (id: number) => void }) {
+export default function Office(props: { agents: AgentRuntime[]; stats: OfficeStats; selectedId: number | null; onSelect: (id: number) => void }) {
   return (
-    <Canvas camera={{ position: [0, 9.5, 12], fov: 50 }} dpr={[1, 2]}>
-      <color attach="background" args={["#0b1220"]} />
+    <Canvas camera={{ position: [0, 9.5, 12], fov: 50 }} dpr={[1, 2]} shadows>
+      <color attach="background" args={["#070d18"]} />
+      <fog attach="fog" args={["#070d18", 18, 34]} />
       <Rig />
-      <ambientLight intensity={0.8} />
-      <directionalLight position={[6, 10, 6]} intensity={1.1} />
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
+      <ambientLight intensity={0.55} />
+      <hemisphereLight args={["#2a3d5c", "#0a0f18", 0.6]} />
+      <directionalLight position={[6, 12, 6]} intensity={1.0} castShadow />
+      <pointLight position={[0, 6, -7]} intensity={40} color="#1b6ef3" distance={22} />
+      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]} receiveShadow>
         <planeGeometry args={[34, 28]} />
-        <meshStandardMaterial color="#16202e" />
+        <meshStandardMaterial color="#0f1826" metalness={0.2} roughness={0.9} />
       </mesh>
-      <ServerRoom label={props.hashrateLabel} />
+      <gridHelper args={[34, 34, "#1b2b44", "#132032"]} position={[0, 0, 0]} />
+      <VideoWall stats={props.stats} />
       {props.agents.map((a) => (
         <Desk key={a.id} agent={a} selected={props.selectedId === a.id} onSelect={props.onSelect} />
       ))}
