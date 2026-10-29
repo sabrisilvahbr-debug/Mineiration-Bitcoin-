@@ -17,7 +17,13 @@ jobs:
       - name: Tipos
         run: npm run typecheck
       - name: Testes
-        run: npm test
+        run: |
+          set +e
+          npm test 2>&1 | tee testes.txt
+          code=${PIPESTATUS[0]}
+          body=$(grep -E "^# (tests|pass|fail)|^not ok" testes.txt | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')
+          echo "::notice title=Testes (exit $code)::$body"
+          exit $code
       - name: Build do site
         run: npm run build
   sources:
@@ -30,4 +36,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-      - run: npm run verify:sources
+      - name: Verificar fontes ao vivo
+        run: |
+          set +e
+          npm run verify:sources 2>&1 | tee fontes.txt
+          code=${PIPESTATUS[0]}
+          body=$(cat fontes.txt | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+          echo "::notice title=Fontes ao vivo (exit $code)::$body"
+          exit $code
