@@ -1,0 +1,23 @@
+name: Sondar APIs de aluguel
+on:
+  workflow_dispatch:
+  push:
+    paths:
+      - "scripts/probe-rental.ts"
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Sondar
+        run: |
+          set +e
+          node scripts/probe-rental.ts 2>&1 | tee probe.txt
+          body=$(cat probe.txt | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')
+          echo "::notice title=Sondagem de aluguel::$body"
