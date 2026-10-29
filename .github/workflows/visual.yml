@@ -1,0 +1,33 @@
+name: Captura visual trading
+on:
+  workflow_dispatch:
+  push:
+    paths: [".github/scripts/shot.mjs", ".github/workflows/visual.yml"]
+permissions: { contents: write }
+jobs:
+  shot:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: npm install --no-save --no-audit --no-fund playwright
+      - run: npx playwright install --with-deps chromium
+      - run: npm run build
+      - name: Servir e capturar
+        run: |
+          npx next start -p 3000 > next.log 2>&1 &
+          for i in $(seq 1 40); do curl -sf http://localhost:3000/api/state >/dev/null && break; sleep 1; done
+          node .github/scripts/shot.mjs
+          tail -n 15 next.log || true
+      - name: Publicar capturas
+        if: always()
+        run: |
+          git config user.name "github-actions"; git config user.email "gh@users.noreply.github.com"
+          mkdir -p /tmp/out && cp -r shots/. /tmp/out/ 2>/dev/null || true; cp next.log /tmp/out/ 2>/dev/null || true
+          git checkout --orphan ci-screenshots-trading
+          git rm -rf . -q; git clean -ffdxq
+          cp -r /tmp/out/. .
+          git add -A; git commit -q -m "capturas trading"; git push -f origin ci-screenshots-trading
