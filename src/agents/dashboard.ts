@@ -9,7 +9,7 @@ import type { RiskLimits } from "../risk/guardian.ts";
 import { ageSeconds } from "../lib/types.ts";
 import { AGENTS } from "./registry.ts";
 
-export type AgentStatus = "trabalhando" | "alerta" | "ocioso" | "pausado" | "em_espera";
+export type AgentStatus = "trabalhando" | "simulado" | "alerta" | "ocioso" | "pausado" | "em_espera";
 export interface AgentRuntime { id: number; name: string; status: AgentStatus; detail: string; }
 export interface ProductView {
   product: string;
@@ -61,7 +61,7 @@ function agentStatus(state: DashboardState["state"], dataOk: boolean, id: number
   switch (id) {
     case 2: return dataOk ? ["trabalhando", "Cotações reais (Coinbase)"] : ["alerta", "Sem dado de cotação"];
     case 9: return state === "NORMAL" ? ["trabalhando", "Limites e frescor conferidos"] : state === "CAUTELA" ? ["alerta", "Exposição no limite"] : ["pausado", "Pausa de risco/manual"];
-    case 11: case 12: return paused ? ["pausado", "Execução suspensa"] : ["simulado", "Paper trading"] as [AgentStatus, string];
+    case 11: case 12: return paused ? ["pausado", "Execução suspensa"] : ["simulado", "Paper trading"];
     default: return paused ? ["pausado", "Aguardando liberação do Guardião"] : ["trabalhando", spec.role];
   }
 }
