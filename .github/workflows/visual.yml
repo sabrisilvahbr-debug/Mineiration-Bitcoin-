@@ -36,6 +36,7 @@ jobs:
           cp next.log /tmp/out/next.log 2>/dev/null || true
           git checkout --orphan ci-screenshots
           git rm -rf . -q
+          git clean -ffdxq
           cp -r /tmp/out/. .
           git add -A
           git commit -q -m "capturas de tela do CI"
