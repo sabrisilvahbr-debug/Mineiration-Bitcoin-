@@ -1,0 +1,50 @@
+:root {
+  --bg: #f4f6f9; --panel: #ffffff; --ink: #121a26; --muted: #5b6878; --line: #d9e0ea;
+  --accent: #1b6ef3; --ok: #1f9d5b; --warn: #b9770e; --bad: #c9302c; --idle: #6b7a90;
+}
+@media (prefers-color-scheme: dark) {
+  :root { --bg: #0c1118; --panel: #151d29; --ink: #e8eef6; --muted: #93a1b5; --line: #263346; --accent: #5b9bff; --ok: #3ecf8e; --warn: #f2b04c; --bad: #ff6b66; --idle: #8190a6; }
+}
+* { box-sizing: border-box; }
+html, body { margin: 0; background: var(--bg); color: var(--ink); font: 15px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+main { max-width: 1280px; width: 100%; margin: 0 auto; padding: 16px; display: grid; gap: 16px; }
+h1 { font-size: 1.25rem; margin: 0; } h2 { font-size: 1rem; margin: 0 0 8px; }
+.top { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; }
+.disclaimer { background: var(--panel); border: 1px solid var(--line); border-left: 4px solid var(--warn); border-radius: 8px; padding: 10px 12px; color: var(--muted); font-size: .9rem; }
+.grid { display: grid; gap: 16px; grid-template-columns: 1fr; }
+@media (min-width: 960px) { .grid { grid-template-columns: minmax(0, 420px) minmax(0, 1fr); } }
+.grid > * { min-width: 0; }
+@media (max-width: 959px) { .col-office { order: -1; } }
+.scroll-x { overflow-x: auto; }
+.card { background: var(--panel); border: 1px solid var(--line); border-radius: 12px; padding: 14px; }
+.stat { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px dashed var(--line); }
+.stat:last-child { border-bottom: 0; } .stat > span:first-child { color: var(--muted); }
+.stat b { text-align: right; font-variant-numeric: tabular-nums; }
+.src { display: block; color: var(--muted); font-size: .78rem; font-weight: 400; }
+.badge { display: inline-block; padding: 2px 10px; border-radius: 999px; font-weight: 600; font-size: .8rem; border: 1px solid currentColor; }
+.NORMAL { color: var(--ok); } .CAUTELA { color: var(--warn); } .PAUSADO_RISCO, .PAUSADO_MANUAL { color: var(--bad); }
+.loss { color: var(--bad); } .gain { color: var(--ok); } .muted { color: var(--muted); }
+form { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; }
+form input, form select, form button { width: 100%; }
+.tabs button { flex: 1; }
+label { display: grid; min-width: 0; gap: 2px; font-size: .8rem; color: var(--muted); }
+input, select, button { min-width: 0; font: inherit; padding: 8px; border-radius: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--ink); min-height: 40px; }
+button { cursor: pointer; background: var(--accent); color: #fff; border-color: transparent; font-weight: 600; }
+button.secondary { background: transparent; color: var(--ink); border-color: var(--line); }
+button.danger { background: var(--bad); }
+.office { height: 58vh; min-height: 340px; border-radius: 12px; overflow: hidden; border: 1px solid var(--line); background: #0b1220; position: relative; }
+.tabs { display: flex; gap: 8px; margin-bottom: 8px; }
+.agents { display: grid; gap: 6px; grid-template-columns: 1fr; }
+@media (min-width: 640px) { .agents { grid-template-columns: 1fr 1fr; } }
+.agent { display: flex; gap: 10px; align-items: flex-start; padding: 8px 10px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel); text-align: left; color: var(--ink); min-height: 44px; }
+.dot { width: 10px; height: 10px; border-radius: 50%; margin-top: 6px; flex: none; }
+.s-trabalhando { background: var(--ok); } .s-alerta { background: var(--warn); } .s-ocioso { background: var(--idle); }
+.s-pausado_risco { background: var(--bad); } .s-em_espera { background: #4b5563; }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .8rem; color: var(--muted); margin-top: 8px; }
+.legend i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 5px; }
+pre { white-space: pre-wrap; margin: 0; font: inherit; }
+.notice { border-left: 4px solid var(--bad); padding: 8px 12px; background: var(--panel); border-radius: 8px; border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; } th, td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line); } th:first-child, td:first-child { text-align: left; }
+
+.stack { display: grid; gap: 16px; align-content: start; grid-template-columns: minmax(0, 1fr); }
+.card { min-width: 0; }

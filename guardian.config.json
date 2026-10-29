@@ -1,0 +1,21 @@
+{
+  "mode": "SIMULACAO",
+  "freshness": {
+    "priceMaxAgeSec": 60,
+    "hashpriceMaxAgeSec": 900,
+    "networkMaxAgeSec": 900,
+    "orderStatusMaxAgeSec": 120,
+    "orderFailuresToPause": 3,
+    "maxPriceDivergence": 0.015
+  },
+  "limits": {
+    "dailySpendBrl": null,
+    "totalSpendBrl": null,
+    "dailyStopLossBrl": null
+  },
+  "policy": {
+    "pauseMargin": 0,
+    "resumeMargin": 0.1,
+    "resumeConsecutive": 3
+  }
+}
