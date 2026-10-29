@@ -1,0 +1,33 @@
+name: CI
+on: [push, pull_request, workflow_dispatch]
+permissions: { contents: read }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund || true
+      - name: Tipos
+        run: npx -y typescript@5.8.3 tsc --noEmit
+      - name: Testes
+        run: |
+          set +e
+          node --test "tests/**/*.test.ts" 2>&1 | tee t.txt
+          code=${PIPESTATUS[0]}
+          echo "::notice title=Testes (exit $code)::$(grep -E '^# (tests|pass|fail)|^not ok' t.txt | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')"
+          exit $code
+  sources:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - name: Fontes reais + backtest ao vivo
+        run: |
+          set +e
+          node scripts/verify-sources.ts 2>&1 | tee s.txt
+          code=${PIPESTATUS[0]}
+          echo "::notice title=Fontes reais (exit $code)::$(cat s.txt | sed ':a;N;$!ba;s/%/%25/g;s/\r//g;s/\n/%0A/g')"
