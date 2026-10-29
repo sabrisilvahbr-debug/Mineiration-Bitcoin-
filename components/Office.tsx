@@ -1,6 +1,6 @@
 "use client";
 import { useEffect, useMemo, useRef } from "react";
-import { Canvas, useFrame } from "@react-three/fiber";
+import { Canvas, useFrame, useThree } from "@react-three/fiber";
 import { OrbitControls } from "@react-three/drei";
 import { CanvasTexture } from "three";
 import type { Group } from "three";
@@ -99,10 +99,24 @@ function ServerRoom({ label }: { label: string }) {
   );
 }
 
+/** Afasta a câmera em telas estreitas (celular) para caber as 5 colunas de mesas. */
+function Rig() {
+  const camera = useThree((t) => t.camera);
+  const size = useThree((t) => t.size);
+  useEffect(() => {
+    const aspect = size.width / Math.max(size.height, 1);
+    const k = aspect < 1.3 ? 1.3 / aspect : 1;
+    camera.position.set(0, 9.5 * k, 12 * k);
+    camera.lookAt(0, 0.5, -1);
+  }, [camera, size.width, size.height]);
+  return null;
+}
+
 export default function Office(props: { agents: AgentRuntime[]; hashrateLabel: string; selectedId: number | null; onSelect: (id: number) => void }) {
   return (
     <Canvas camera={{ position: [0, 9.5, 12], fov: 50 }} dpr={[1, 2]}>
       <color attach="background" args={["#0b1220"]} />
+      <Rig />
       <ambientLight intensity={0.8} />
       <directionalLight position={[6, 10, 6]} intensity={1.1} />
       <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.01, 0]}>
@@ -113,7 +127,7 @@ export default function Office(props: { agents: AgentRuntime[]; hashrateLabel: s
       {props.agents.map((a) => (
         <Desk key={a.id} agent={a} selected={props.selectedId === a.id} onSelect={props.onSelect} />
       ))}
-      <OrbitControls enablePan={false} minDistance={6} maxDistance={26} maxPolarAngle={Math.PI / 2.1} target={[0, 0.5, -1]} />
+      <OrbitControls enablePan={false} minDistance={6} maxDistance={40} maxPolarAngle={Math.PI / 2.1} target={[0, 0.5, -1]} />
     </Canvas>
   );
 }

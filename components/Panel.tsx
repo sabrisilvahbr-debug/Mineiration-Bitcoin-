@@ -15,7 +15,7 @@ export default function Panel({ r }: { r: CycleResult }) {
   const hp = r.network.ok ? r.network.value : null;
   const btcPerPh = hp ? hp.hashpriceBtcPerPhDay : null;
   return (
-    <div style={{ display: "grid", gap: 16 }}>
+    <div className="stack">
       <section className="card">
         <h2>Estado <span className={`badge ${r.verdict.state}`}>{r.verdict.state.replace("_", " ")}</span> <span className="muted">· modo {r.mode}</span></h2>
         <p className="muted" style={{ margin: 0 }}>Atualizado em {clock(r.at)} (Brasília)</p>

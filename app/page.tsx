@@ -90,7 +90,7 @@ export default function Home() {
       {!r && !error && <p className="muted">Carregando dados reais…</p>}
       {r && (
         <div className="grid">
-          <div style={{ display: "grid", gap: 16, alignContent: "start" }}>
+          <div className="stack">
             <section className="card">
               <h2>Seus custos (só você informa)</h2>
               <form onSubmit={apply}>
@@ -111,7 +111,7 @@ export default function Home() {
             </section>
             <Panel r={r} />
           </div>
-          <div className="col-office" style={{ display: "grid", gap: 16, alignContent: "start" }}>
+          <div className="col-office stack">
             <section>
               <div className="tabs" role="tablist">
                 <button type="button" className={view === "3d" ? "" : "secondary"} onClick={() => setView("3d")}>Escritório 3D</button>

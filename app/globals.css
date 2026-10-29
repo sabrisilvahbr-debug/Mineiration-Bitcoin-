@@ -45,3 +45,6 @@ button.danger { background: var(--bad); }
 pre { white-space: pre-wrap; margin: 0; font: inherit; }
 .notice { border-left: 4px solid var(--bad); padding: 8px 12px; background: var(--panel); border-radius: 8px; border-top: 1px solid var(--line); border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; } th, td { text-align: right; padding: 4px 6px; border-bottom: 1px solid var(--line); } th:first-child, td:first-child { text-align: left; }
+
+.stack { display: grid; gap: 16px; align-content: start; grid-template-columns: minmax(0, 1fr); }
+.card { min-width: 0; }
