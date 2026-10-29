@@ -18,6 +18,8 @@ jobs:
           code=${PIPESTATUS[0]}
           echo "::notice title=Testes (exit $code)::$(grep -E '^# (tests|pass|fail)|^not ok' t.txt | sed ':a;N;$!ba;s/%/%25/g;s/\n/%0A/g')"
           exit $code
+      - name: Build do app
+        run: npm run build
   sources:
     runs-on: ubuntu-latest
     if: github.event_name != 'pull_request'
