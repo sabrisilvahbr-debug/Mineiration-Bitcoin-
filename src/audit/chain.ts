@@ -32,3 +32,19 @@ export function verifyChain(entries: AuditEntry[]): { ok: boolean; brokenAt?: nu
   }
   return { ok: true };
 }
+
+/** Verifica um trecho final da cadeia: o primeiro item é a âncora (seq e prevHash vêm dele). */
+export function verifyTail(entries: AuditEntry[]): { ok: boolean; brokenAt?: number } {
+  const first = entries[0];
+  if (!first) return { ok: true };
+  let prevHash = first.prevHash;
+  let seq = first.seq;
+  for (const e of entries) {
+    if (e.seq !== seq || e.prevHash !== prevHash || e.hash !== hashOf(prevHash, e.seq, e.ts, e.payload)) {
+      return { ok: false, brokenAt: e.seq };
+    }
+    prevHash = e.hash;
+    seq++;
+  }
+  return { ok: true };
+}
