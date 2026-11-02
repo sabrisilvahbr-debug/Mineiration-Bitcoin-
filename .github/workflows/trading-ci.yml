@@ -1,0 +1,27 @@
+name: Trading CI
+on:
+  push: { paths: ["trading/**", ".github/workflows/trading-ci.yml"] }
+  pull_request: { paths: ["trading/**"] }
+  workflow_dispatch:
+permissions: { contents: read }
+defaults:
+  run: { working-directory: trading }
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: npm install --no-audit --no-fund
+      - run: npm run typecheck
+      - run: node --test "tests/**/*.test.ts"
+      - run: npm run build
+  sources:
+    runs-on: ubuntu-latest
+    if: github.event_name != 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: 22 }
+      - run: node scripts/verify-sources.ts
